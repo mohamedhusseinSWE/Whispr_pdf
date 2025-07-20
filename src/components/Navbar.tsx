@@ -46,8 +46,8 @@ const Navbar = () => {
   const logout = trpc.auth.logout.useMutation({
     onSuccess: async () => {
       toast.success("Logged out successfully!");
-      // Clear the user data from cache immediately
-      utils.auth.me.setData(undefined, null);
+      // Clear the user data from cache immediately - fix the TypeScript error
+      utils.auth.me.setData(undefined, undefined);
       // Invalidate to refetch and ensure fresh state
       await utils.auth.me.invalidate();
       // Force a page refresh to ensure clean state

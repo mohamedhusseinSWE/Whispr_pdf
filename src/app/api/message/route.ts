@@ -40,12 +40,8 @@ export const POST = async (req: NextRequest) => {
     const chunks = await db.chunk.findMany({
       where: {
         fileId,
-        text: {
-          contains: message,
-          mode: "insensitive",
-        },
       },
-      take: 2, // قلل عدد القطع
+      take: 10,
     });
 
     const prevMessages = await db.message.findMany({
@@ -60,33 +56,24 @@ export const POST = async (req: NextRequest) => {
     }));
 
     const response = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat:free",
+      model: "deepseek/deepseek-r1:free",
       temperature: 0.7,
-      max_tokens: 1024, //
+      max_tokens: 1024,
       stream: true,
       messages: [
         {
           role: "system",
-          content:
-            "Use the following pieces of context (or previous conversation if needed) to answer the user's question in markdown format.",
+          content: `You are an intelligent assistant. Use the provided context from a PDF document to answer questions or summarize it. Respond in markdown.`,
         },
         {
           role: "user",
-          content: `Use the following context (and previous messages if helpful) to answer the question.
+          content: `
+Here is the extracted content from the PDF:
 
-----------------
-PREVIOUS CONVERSATION:
-${formattedPrevMessages
-  .map((m) =>
-    m.role === "user" ? `User: ${m.content}` : `Assistant: ${m.content}`,
-  )
-  .join("\n")}
-
-----------------
-CONTEXT:
 ${chunks.map((c) => c.text).join("\n\n")}
 
-USER INPUT: ${message}`,
+Now, please respond to the following prompt: "${message}"
+      `,
         },
       ],
     });

@@ -58,6 +58,9 @@ const onUploadComplete = (planName: "Free" | "Pro") => {
 
       const loader = new PDFLoader(new Blob([arrayBuffer]));
       const pageLevelDocs = await loader.load();
+      console.log("Number of extracted pages:", pageLevelDocs.length);
+      console.log("Sample page content:", pageLevelDocs[0]?.pageContent);
+
       const pageCount = pageLevelDocs.length;
 
       const currentPlan = PLANS.find((p) => p.name === planName);
@@ -80,6 +83,10 @@ const onUploadComplete = (planName: "Free" | "Pro") => {
       // Chunk + insert
       for (const doc of pageLevelDocs) {
         const chunks = chunkText(doc.pageContent);
+        if (!doc.pageContent || !doc.pageContent.trim()) {
+          console.warn("⚠️ Empty page content. Skipping...");
+          continue;
+        }
 
         for (const chunk of chunks) {
           await db.chunk.create({
